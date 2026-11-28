@@ -16,6 +16,8 @@ export interface FilterSidebarProps {
   hasActiveFilters: boolean;
   totalFiltered: number;
   totalBooks: number;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
   categoryCounts?: Partial<Record<BookCategory, number>>;
   statusCounts?: Partial<Record<BookStatus, number>>;
   formatCounts?: Partial<Record<BookFormat, number>>;
@@ -135,6 +137,8 @@ export default function FilterSidebar({
   hasActiveFilters,
   totalFiltered,
   totalBooks,
+  isMobileOpen = false,
+  onCloseMobile,
   categoryCounts,
   statusCounts,
   formatCounts,
@@ -174,7 +178,11 @@ export default function FilterSidebar({
   ];
 
   return (
-    <aside className="ls-sidebar" aria-label="Filter katalog buku">
+    <aside
+      id="ls-filter-sidebar"
+      className={`ls-sidebar${isMobileOpen ? ' ls-sidebar--mobile-open' : ''}`}
+      aria-label="Filter katalog buku"
+    >
       <div className="ls-sidebar__header">
         <div className="ls-sidebar__title-group">
           <span className="ls-sidebar__icon" aria-hidden="true">
@@ -198,6 +206,29 @@ export default function FilterSidebar({
             </p>
           </div>
         </div>
+
+        {onCloseMobile && (
+          <button
+            type="button"
+            className="ls-sidebar__close-mobile"
+            onClick={onCloseMobile}
+            aria-label="Tutup panel filter"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Filter Kategori */}

@@ -803,6 +803,76 @@ svg {
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
 }
 
+/* Mobile Sidebar Toggle Bar (hidden on desktop) */
+.ls-mobile-filter-bar {
+  display: none;
+  margin-bottom: 1rem;
+}
+
+.ls-mobile-filter-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.72rem 1rem;
+  border-radius: var(--ls-radius-md);
+  border: 1px solid var(--ls-border);
+  background: var(--ls-surface);
+  color: var(--ls-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  box-shadow: var(--ls-shadow-xs);
+  transition: border-color var(--ls-transition), background-color var(--ls-transition),
+    color var(--ls-transition);
+}
+
+.ls-mobile-filter-toggle:hover,
+.ls-mobile-filter-toggle--open {
+  border-color: var(--ls-primary-border);
+  background: var(--ls-primary-light);
+  color: var(--ls-primary);
+}
+
+.ls-mobile-filter-toggle__left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.ls-mobile-filter-toggle__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 0.4rem;
+  border-radius: var(--ls-radius-full);
+  background: var(--ls-primary);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ls-sidebar__close-mobile {
+  display: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--ls-radius-sm);
+  border: 1px solid var(--ls-border);
+  background: var(--ls-bg);
+  color: var(--ls-text-secondary);
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ls-sidebar__close-mobile:hover {
+  border-color: var(--ls-primary-border);
+  color: var(--ls-primary);
+  background: var(--ls-primary-light);
+}
+
 /* Catalog Layout with Sidebar */
 .ls-catalog-layout {
   display: grid;
@@ -894,6 +964,10 @@ svg {
   background: var(--ls-surface);
   padding: 1.25rem 0 0.95rem;
   border-bottom: 1px solid var(--ls-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .ls-sidebar__title-group {
@@ -2025,6 +2099,15 @@ svg {
    Responsive Breakpoints
    ========================================================================== */
 @media (max-width: 1024px) {
+  .ls-brand__tagline {
+    display: none;
+  }
+
+  .ls-navbar__link {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.85rem;
+  }
+
   .ls-hero {
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -2034,13 +2117,26 @@ svg {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .ls-mobile-filter-bar {
+    display: block;
+  }
+
   .ls-catalog-layout {
     grid-template-columns: 1fr;
   }
 
   .ls-sidebar {
+    display: none;
     position: static;
     max-height: min(460px, 65vh);
+  }
+
+  .ls-sidebar--mobile-open {
+    display: flex;
+  }
+
+  .ls-sidebar__close-mobile {
+    display: inline-flex;
   }
 
   .ls-book-grid {
@@ -2145,6 +2241,30 @@ svg {
 @media (max-width: 480px) {
   .ls-stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ls-progress-card__percent {
+    flex-wrap: wrap;
+  }
+
+  .ls-section-header__actions {
+    width: 100%;
+  }
+
+  .ls-book-card__actions {
+    flex-wrap: wrap;
+  }
+
+  .ls-modal-backdrop {
+    padding: 0.75rem;
+  }
+
+  .ls-modal__header,
+  .ls-modal__cover,
+  .ls-modal__body,
+  .ls-form {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
   }
 
   .ls-navbar__right .ls-student-badge {

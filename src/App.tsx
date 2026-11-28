@@ -61,6 +61,7 @@ export default function App() {
   const [selectedFormat, setSelectedFormat] = useState<BookFormat | 'Semua'>('Semua');
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -288,6 +289,56 @@ export default function App() {
               </div>
             </div>
 
+            <div className="ls-mobile-filter-bar">
+              <button
+                type="button"
+                className={`ls-mobile-filter-toggle${
+                  isMobileSidebarOpen ? ' ls-mobile-filter-toggle--open' : ''
+                }`}
+                onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
+                aria-expanded={isMobileSidebarOpen}
+                aria-controls="ls-filter-sidebar"
+              >
+                <span className="ls-mobile-filter-toggle__left">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                  </svg>
+                  <span>{isMobileSidebarOpen ? 'Sembunyikan Filter' : 'Tampilkan Filter'}</span>
+                  {activeFilterTags.length > 0 && (
+                    <span className="ls-mobile-filter-toggle__badge">
+                      {activeFilterTags.length}
+                    </span>
+                  )}
+                </span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`ls-filter-toggle__icon${
+                    isMobileSidebarOpen ? ' ls-filter-toggle__icon--expanded' : ''
+                  }`}
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+            </div>
+
             <div className="ls-catalog-layout">
               <FilterSidebar
                 selectedCategory={selectedCategory}
@@ -296,6 +347,8 @@ export default function App() {
                 hasActiveFilters={hasActiveFilters}
                 totalFiltered={filteredAndSortedBooks.length}
                 totalBooks={books.length}
+                isMobileOpen={isMobileSidebarOpen}
+                onCloseMobile={() => setIsMobileSidebarOpen(false)}
                 categoryCounts={categoryCounts}
                 statusCounts={statusCounts}
                 formatCounts={formatCounts}
