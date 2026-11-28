@@ -1,27 +1,86 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import AddBookModal from './components/AddBookModal';
 import BookCard from './components/BookCard';
+import BookDetailModal from './components/BookDetailModal';
 import FilterSidebar from './components/FilterSidebar';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 import StatsBanner from './components/StatsBanner';
 import { INITIAL_BOOKS } from './data/initialBooks';
-import type { Book, BookCategory, BookFormat, BookStatus } from './types/book';
+import type {
+  Book,
+  BookCategory,
+  BookFormData,
+  BookFormat,
+  BookSortOption,
+  BookStatus,
+} from './types/book';
 import { BOOK_STATUS_LABELS, getNextBookStatus } from './types/book';
 
+const STORAGE_KEY = 'litspace_books_v1';
+
+const SORT_OPTIONS: readonly { value: BookSortOption; label: string }[] = [
+  { value: 'terbaru', label: 'Terbaru Ditambahkan' },
+  { value: 'judul-asc', label: 'Judul (A – Z)' },
+  { value: 'judul-desc', label: 'Judul (Z – A)' },
+  { value: 'rating-desc', label: 'Rating Tertinggi' },
+  { value: 'tahun-desc', label: 'Tahun Terbit Terbaru' },
+] as const;
+
+function loadBooksFromStorage(): Book[] {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw === null) {
+      return INITIAL_BOOKS;
+    }
+
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return INITIAL_BOOKS;
+    }
+
+    return parsed.filter(
+      (item): item is Book =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof (item as Book).id === 'string' &&
+        typeof (item as Book).title === 'string' &&
+        typeof (item as Book).author === 'string',
+    );
+  } catch {
+    return INITIAL_BOOKS;
+  }
+}
+
 export default function App() {
-  const [books, setBooks] = useState<Book[]>(INITIAL_BOOKS);
+  const [books, setBooks] = useState<Book[]>(loadBooksFromStorage);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<BookSortOption>('terbaru');
   const [selectedCategory, setSelectedCategory] = useState<BookCategory | 'Semua'>('Semua');
   const [selectedStatus, setSelectedStatus] = useState<BookStatus | 'semua'>('semua');
   const [selectedFormat, setSelectedFormat] = useState<BookFormat | 'Semua'>('Semua');
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+    } catch {
+      // Abaikan jika penyimpanan browser penuh atau tidak tersedia
+    }
+  }, [books]);
 
   const selectedBook = useMemo(
     () => books.find((book) => book.id === selectedBookId) ?? null,
     [books, selectedBookId],
   );
 
+  const trimmedSearch = searchQuery.trim();
   const hasActiveFilters =
-    selectedCategory !== 'Semua' || selectedStatus !== 'semua' || selectedFormat !== 'Semua';
+    trimmedSearch.length > 0 ||
+    selectedCategory !== 'Semua' ||
+    selectedStatus !== 'semua' ||
+    selectedFormat !== 'Semua';
 
   const { categoryCounts, statusCounts, formatCounts } = useMemo(() => {
     const categories: Partial<Record<BookCategory, number>> = {};
@@ -41,22 +100,45 @@ export default function App() {
     };
   }, [books]);
 
-  const filteredBooks = useMemo(
-    () =>
-      books.filter((book) => {
-        const matchCategory =
-          selectedCategory === 'Semua' || book.category === selectedCategory;
-        const matchStatus = selectedStatus === 'semua' || book.status === selectedStatus;
-        const matchFormat = selectedFormat === 'Semua' || book.format === selectedFormat;
+  const filteredAndSortedBooks = useMemo(() => {
+    const normalizedSearch = trimmedSearch.toLowerCase();
 
-        return matchCategory && matchStatus && matchFormat;
-      }),
-    [books, selectedCategory, selectedStatus, selectedFormat],
-  );
+    const matched = books.filter((book) => {
+      const matchSearch =
+        normalizedSearch.length === 0 ||
+        book.title.toLowerCase().includes(normalizedSearch) ||
+        book.author.toLowerCase().includes(normalizedSearch);
+      const matchCategory =
+        selectedCategory === 'Semua' || book.category === selectedCategory;
+      const matchStatus = selectedStatus === 'semua' || book.status === selectedStatus;
+      const matchFormat = selectedFormat === 'Semua' || book.format === selectedFormat;
+
+      return matchSearch && matchCategory && matchStatus && matchFormat;
+    });
+
+    return [...matched].sort((a, b) => {
+      switch (sortBy) {
+        case 'judul-asc':
+          return a.title.localeCompare(b.title, 'id');
+        case 'judul-desc':
+          return b.title.localeCompare(a.title, 'id');
+        case 'rating-desc':
+          return b.rating - a.rating || a.title.localeCompare(b.title, 'id');
+        case 'tahun-desc':
+          return b.year - a.year || a.title.localeCompare(b.title, 'id');
+        case 'terbaru':
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+  }, [books, trimmedSearch, selectedCategory, selectedStatus, selectedFormat, sortBy]);
 
   const activeFilterTags = useMemo(() => {
     const tags: { id: string; label: string }[] = [];
 
+    if (trimmedSearch.length > 0) {
+      tags.push({ id: 'search', label: `Pencarian: "${trimmedSearch}"` });
+    }
     if (selectedCategory !== 'Semua') {
       tags.push({ id: 'category', label: `Kategori: ${selectedCategory}` });
     }
@@ -68,7 +150,17 @@ export default function App() {
     }
 
     return tags;
-  }, [selectedCategory, selectedStatus, selectedFormat]);
+  }, [trimmedSearch, selectedCategory, selectedStatus, selectedFormat]);
+
+  const handleAddBook = (bookData: BookFormData) => {
+    const newBook: Book = {
+      ...bookData,
+      id: `bk-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    setBooks((prevBooks) => [newBook, ...prevBooks]);
+  };
 
   const handleToggleStatus = (bookId: string) => {
     setBooks((prevBooks) =>
@@ -115,6 +207,22 @@ export default function App() {
   };
 
   const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('Semua');
+    setSelectedStatus('semua');
+    setSelectedFormat('Semua');
+  };
+
+  const handleResetInitialData = () => {
+    const confirmed = window.confirm(
+      'Kembalikan seluruh koleksi buku ke data awal LitSpace? Perubahan yang tersimpan di browser akan diganti.',
+    );
+    if (!confirmed) return;
+
+    setBooks(INITIAL_BOOKS);
+    setSelectedBookId(null);
+    setSearchQuery('');
+    setSortBy('terbaru');
     setSelectedCategory('Semua');
     setSelectedStatus('semua');
     setSelectedFormat('Semua');
@@ -140,13 +248,44 @@ export default function App() {
                   Katalog Buku LitSpace
                 </h2>
                 <p className="ls-section-header__subtitle">
-                  Saring koleksi berdasarkan kategori, status baca, atau format buku, lalu kelola
-                  progres bacaan langsung dari kartu buku.
+                  Cari judul atau penulis, saring koleksi, urutkan daftar, atau tambahkan buku baru
+                  yang tersimpan otomatis di browser Anda.
                 </p>
               </div>
-              <span className="ls-section-header__count">
-                {filteredBooks.length} dari {books.length} Judul
-              </span>
+
+              <div className="ls-section-header__actions">
+                <span className="ls-section-header__count">
+                  {filteredAndSortedBooks.length} dari {books.length} Judul
+                </span>
+                <button
+                  type="button"
+                  className="ls-btn ls-btn--outline ls-btn--sm"
+                  onClick={handleResetInitialData}
+                >
+                  Reset Data Awal
+                </button>
+                <button
+                  type="button"
+                  className="ls-btn ls-btn--primary ls-btn--sm"
+                  onClick={() => setIsAddModalOpen(true)}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="M12 5v14" />
+                  </svg>
+                  Tambah Buku
+                </button>
+              </div>
             </div>
 
             <div className="ls-catalog-layout">
@@ -155,7 +294,7 @@ export default function App() {
                 selectedStatus={selectedStatus}
                 selectedFormat={selectedFormat}
                 hasActiveFilters={hasActiveFilters}
-                totalFiltered={filteredBooks.length}
+                totalFiltered={filteredAndSortedBooks.length}
                 totalBooks={books.length}
                 categoryCounts={categoryCounts}
                 statusCounts={statusCounts}
@@ -167,6 +306,74 @@ export default function App() {
               />
 
               <div className="ls-catalog-content">
+                <div className="ls-toolbar" role="search" aria-label="Pencarian dan pengurutan buku">
+                  <div className="ls-search-box">
+                    <svg
+                      width="17"
+                      height="17"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="ls-search-box__icon"
+                      aria-hidden="true"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.3-4.3" />
+                    </svg>
+                    <input
+                      type="search"
+                      className="ls-search-box__input"
+                      placeholder="Cari judul buku atau nama penulis..."
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      aria-label="Cari judul buku atau nama penulis"
+                    />
+                    {searchQuery.length > 0 && (
+                      <button
+                        type="button"
+                        className="ls-search-box__clear"
+                        onClick={() => setSearchQuery('')}
+                        aria-label="Hapus kata kunci pencarian"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M18 6 6 18" />
+                          <path d="m6 6 12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="ls-sort-control">
+                    <label htmlFor="ls-sort-books" className="ls-sort-control__label">
+                      Urutkan
+                    </label>
+                    <select
+                      id="ls-sort-books"
+                      className="ls-sort-control__select"
+                      value={sortBy}
+                      onChange={(event) => setSortBy(event.target.value as BookSortOption)}
+                    >
+                      {SORT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 {hasActiveFilters && (
                   <div className="ls-active-filters" aria-label="Filter yang sedang aktif">
                     <span className="ls-active-filters__label">Filter aktif:</span>
@@ -178,7 +385,7 @@ export default function App() {
                   </div>
                 )}
 
-                {filteredBooks.length === 0 ? (
+                {filteredAndSortedBooks.length === 0 ? (
                   <div className="ls-empty-state" role="status">
                     <span className="ls-empty-state__icon" aria-hidden="true">
                       <svg
@@ -200,27 +407,46 @@ export default function App() {
                     <h3 className="ls-empty-state__title">
                       {books.length === 0
                         ? 'Belum ada buku di katalog'
-                        : 'Tidak ada buku yang cocok dengan filter'}
+                        : 'Tidak ada buku yang cocok dengan pencarian atau filter'}
                     </h3>
                     <p className="ls-empty-state__desc">
                       {books.length === 0
-                        ? 'Seluruh koleksi buku telah dihapus dari daftar sementara.'
-                        : 'Coba ubah kombinasi kategori, status baca, atau format buku, atau reset filter untuk menampilkan semua koleksi.'}
+                        ? 'Tambahkan buku baru atau klik Reset Data Awal untuk mengembalikan koleksi bawaan LitSpace.'
+                        : 'Coba ubah kata kunci pencarian atau kombinasi filter, atau reset filter untuk menampilkan semua koleksi.'}
                     </p>
 
-                    {hasActiveFilters && (
-                      <button
-                        type="button"
-                        className="ls-btn ls-btn--primary"
-                        onClick={handleResetFilters}
-                      >
-                        Reset Semua Filter
-                      </button>
+                    {books.length === 0 ? (
+                      <div className="ls-section-header__actions">
+                        <button
+                          type="button"
+                          className="ls-btn ls-btn--outline"
+                          onClick={handleResetInitialData}
+                        >
+                          Reset Data Awal
+                        </button>
+                        <button
+                          type="button"
+                          className="ls-btn ls-btn--primary"
+                          onClick={() => setIsAddModalOpen(true)}
+                        >
+                          Tambah Buku Baru
+                        </button>
+                      </div>
+                    ) : (
+                      hasActiveFilters && (
+                        <button
+                          type="button"
+                          className="ls-btn ls-btn--primary"
+                          onClick={handleResetFilters}
+                        >
+                          Reset Semua Filter
+                        </button>
+                      )
                     )}
                   </div>
                 ) : (
                   <div className="ls-book-grid">
-                    {filteredBooks.map((book) => (
+                    {filteredAndSortedBooks.map((book) => (
                       <BookCard
                         key={book.id}
                         book={book}
@@ -240,110 +466,19 @@ export default function App() {
 
       <Footer totalBooks={books.length} />
 
-      {selectedBook && (
-        <div
-          className="ls-modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="ls-detail-modal-title"
-          onClick={() => setSelectedBookId(null)}
-        >
-          <div className="ls-modal" onClick={(event) => event.stopPropagation()}>
-            <div
-              className="ls-modal__cover"
-              style={{
-                background: `linear-gradient(135deg, ${selectedBook.coverColor}, #1e1b4b)`,
-              }}
-            >
-              <div>
-                <div className="ls-modal__cover-meta">
-                  <span className="ls-book-card__category">{selectedBook.category}</span>
-                  <span className="ls-book-card__format">{selectedBook.format}</span>
-                  <span className="ls-book-card__rating">★ {selectedBook.rating.toFixed(1)}</span>
-                </div>
-                <h3 className="ls-modal__title" id="ls-detail-modal-title">
-                  {selectedBook.title}
-                </h3>
-                <p className="ls-modal__author">oleh {selectedBook.author}</p>
-              </div>
+      <AddBookModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddBook={handleAddBook}
+      />
 
-              <button
-                type="button"
-                className="ls-modal__close"
-                onClick={() => setSelectedBookId(null)}
-                aria-label="Tutup detail buku"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="ls-modal__body">
-              <p className="ls-modal__desc">{selectedBook.description}</p>
-
-              <div className="ls-modal__specs">
-                <div className="ls-modal__spec-item">
-                  <span>Status Baca</span>
-                  <strong>{BOOK_STATUS_LABELS[selectedBook.status]}</strong>
-                </div>
-                <div className="ls-modal__spec-item">
-                  <span>Progres Halaman</span>
-                  <strong>
-                    {selectedBook.status === 'selesai'
-                      ? selectedBook.pages
-                      : selectedBook.currentPage}{' '}
-                    / {selectedBook.pages} halaman
-                  </strong>
-                </div>
-                <div className="ls-modal__spec-item">
-                  <span>Penerbit</span>
-                  <strong>{selectedBook.publisher ?? '-'}</strong>
-                </div>
-                <div className="ls-modal__spec-item">
-                  <span>Tahun Terbit</span>
-                  <strong>{selectedBook.year}</strong>
-                </div>
-                <div className="ls-modal__spec-item">
-                  <span>ISBN</span>
-                  <strong>{selectedBook.isbn ?? '-'}</strong>
-                </div>
-                <div className="ls-modal__spec-item">
-                  <span>Favorit</span>
-                  <strong>{selectedBook.isFavorite ? 'Ya, Difavoritkan' : 'Belum'}</strong>
-                </div>
-              </div>
-
-              <div className="ls-modal__actions">
-                <button
-                  type="button"
-                  className="ls-btn ls-btn--outline"
-                  onClick={() => handleToggleFavorite(selectedBook.id)}
-                >
-                  {selectedBook.isFavorite ? 'Hapus Favorit' : 'Tandai Favorit'}
-                </button>
-                <button
-                  type="button"
-                  className="ls-btn ls-btn--primary"
-                  onClick={() => handleToggleStatus(selectedBook.id)}
-                >
-                  Ubah Status Baca
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <BookDetailModal
+        book={selectedBook}
+        onClose={() => setSelectedBookId(null)}
+        onToggleStatus={handleToggleStatus}
+        onToggleFavorite={handleToggleFavorite}
+        onDelete={handleDeleteBook}
+      />
     </div>
   );
 }
