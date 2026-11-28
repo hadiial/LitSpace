@@ -1,5 +1,7 @@
 export type BookStatus = 'ingin-dibaca' | 'sedang-dibaca' | 'selesai';
 
+export type BookFormat = 'Cetak' | 'E-Book' | 'Audiobook';
+
 export type BookCategory =
   | 'Fiksi'
   | 'Teknologi'
@@ -22,6 +24,7 @@ export interface Book {
   title: string;
   author: string;
   category: BookCategory;
+  format: BookFormat;
   year: number;
   pages: number;
   currentPage: number;
@@ -42,6 +45,7 @@ export interface BookFilter {
   search: string;
   category: BookCategory | 'Semua';
   status: BookStatus | 'semua';
+  format: BookFormat | 'Semua';
   onlyFavorites: boolean;
   sortBy: BookSortOption;
 }
@@ -69,11 +73,29 @@ export const BOOK_CATEGORIES: readonly BookCategory[] = [
   'Non-Fiksi',
 ] as const;
 
+export const BOOK_FORMATS: readonly BookFormat[] = [
+  'Cetak',
+  'E-Book',
+  'Audiobook',
+] as const;
+
+export const BOOK_STATUS_OPTIONS: readonly BookStatus[] = [
+  'ingin-dibaca',
+  'sedang-dibaca',
+  'selesai',
+] as const;
+
 export const BOOK_STATUS_LABELS: Record<BookStatus, string> = {
   'ingin-dibaca': 'Ingin Dibaca',
   'sedang-dibaca': 'Sedang Dibaca',
   selesai: 'Selesai Dibaca',
 };
+
+export function getNextBookStatus(currentStatus: BookStatus): BookStatus {
+  if (currentStatus === 'ingin-dibaca') return 'sedang-dibaca';
+  if (currentStatus === 'sedang-dibaca') return 'selesai';
+  return 'ingin-dibaca';
+}
 
 export function calculateBookStats(books: readonly Book[]): BookStats {
   const totalBooks = books.length;
