@@ -673,6 +673,136 @@ svg {
   color: var(--ls-text-secondary);
 }
 
+.ls-section-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.ls-btn--sm {
+  padding: 0.52rem 0.95rem;
+  font-size: 0.84rem;
+}
+
+.ls-btn--danger-outline {
+  background: var(--ls-surface);
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.ls-btn--danger-outline:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
+/* Search & Sort Toolbar */
+.ls-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-border);
+  border-radius: var(--ls-radius-lg);
+  box-shadow: var(--ls-shadow-xs);
+}
+
+.ls-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ls-search-box__icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--ls-text-muted);
+  pointer-events: none;
+}
+
+.ls-search-box__input {
+  width: 100%;
+  padding: 0.58rem 2.2rem 0.58rem 2.45rem;
+  border-radius: var(--ls-radius-md);
+  border: 1px solid var(--ls-border);
+  background: var(--ls-bg);
+  color: var(--ls-text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  transition: border-color var(--ls-transition), background-color var(--ls-transition),
+    box-shadow var(--ls-transition);
+}
+
+.ls-search-box__input::placeholder {
+  color: var(--ls-text-muted);
+}
+
+.ls-search-box__input:focus {
+  outline: none;
+  background: var(--ls-surface);
+  border-color: var(--ls-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+}
+
+.ls-search-box__clear {
+  position: absolute;
+  right: 0.55rem;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--ls-radius-full);
+  border: none;
+  background: transparent;
+  color: var(--ls-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--ls-transition), color var(--ls-transition);
+}
+
+.ls-search-box__clear:hover {
+  background: var(--ls-bg-muted);
+  color: var(--ls-text);
+}
+
+.ls-sort-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.ls-sort-control__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ls-text-muted);
+  white-space: nowrap;
+}
+
+.ls-sort-control__select {
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--ls-radius-md);
+  border: 1px solid var(--ls-border);
+  background: var(--ls-bg);
+  color: var(--ls-text);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--ls-transition), box-shadow var(--ls-transition);
+}
+
+.ls-sort-control__select:focus {
+  outline: none;
+  background: var(--ls-surface);
+  border-color: var(--ls-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+}
+
 /* Catalog Layout with Sidebar */
 .ls-catalog-layout {
   display: grid;
@@ -1334,13 +1464,58 @@ svg {
   box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.28);
 }
 
+.ls-modal--wide {
+  max-width: 640px;
+}
+
+.ls-modal__header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--ls-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ls-modal__eyebrow {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ls-primary);
+}
+
+.ls-modal__header-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--ls-text);
+}
+
 .ls-modal__cover {
+  position: relative;
+  overflow: hidden;
   padding: 1.35rem 1.5rem;
   color: #ffffff;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.ls-modal__cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.45);
+}
+
+.ls-modal__cover-content {
+  position: relative;
+  z-index: 1;
 }
 
 .ls-modal__cover-meta {
@@ -1364,6 +1539,8 @@ svg {
 }
 
 .ls-modal__close {
+  position: relative;
+  z-index: 1;
   width: 34px;
   height: 34px;
   border-radius: var(--ls-radius-full);
@@ -1380,6 +1557,17 @@ svg {
   background: rgba(15, 23, 42, 0.5);
 }
 
+.ls-modal__close--light {
+  border-color: var(--ls-border);
+  background: var(--ls-bg);
+  color: var(--ls-text-secondary);
+}
+
+.ls-modal__close--light:hover {
+  background: var(--ls-bg-muted);
+  color: var(--ls-text);
+}
+
 .ls-modal__body {
   padding: 1.35rem 1.5rem 1.5rem;
   display: flex;
@@ -1387,11 +1575,159 @@ svg {
   gap: 1.15rem;
 }
 
+.ls-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ls-modal__section-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ls-text-muted);
+}
+
 .ls-modal__desc {
   margin: 0;
   font-size: 0.92rem;
   line-height: 1.65;
   color: var(--ls-text-secondary);
+}
+
+.ls-modal__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ls-modal__progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--ls-text-secondary);
+}
+
+.ls-modal__progress-head strong {
+  color: var(--ls-primary);
+}
+
+.ls-modal__progress .ls-progress-bar {
+  margin-bottom: 0;
+}
+
+.ls-modal__actions--between {
+  justify-content: space-between;
+}
+
+.ls-modal__actions-right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* Add Book Form */
+.ls-form {
+  padding: 1.35rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ls-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.ls-form__grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ls-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ls-form__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ls-text);
+}
+
+.ls-form__req {
+  color: #dc2626;
+}
+
+.ls-form__input,
+.ls-form__select,
+.ls-form__textarea {
+  width: 100%;
+  padding: 0.56rem 0.8rem;
+  border-radius: var(--ls-radius-sm);
+  border: 1px solid var(--ls-border-strong);
+  background: var(--ls-surface);
+  color: var(--ls-text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  transition: border-color var(--ls-transition), box-shadow var(--ls-transition);
+}
+
+.ls-form__textarea {
+  resize: vertical;
+  min-height: 82px;
+}
+
+.ls-form__input:focus,
+.ls-form__select:focus,
+.ls-form__textarea:focus {
+  outline: none;
+  border-color: var(--ls-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+}
+
+.ls-form__input--error {
+  border-color: #dc2626;
+}
+
+.ls-form__input--error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
+}
+
+.ls-form__error {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.ls-color-swatches {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.ls-color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ls-radius-full);
+  border: 2px solid transparent;
+  transition: transform var(--ls-transition), box-shadow var(--ls-transition);
+}
+
+.ls-color-swatch:hover {
+  transform: scale(1.08);
+}
+
+.ls-color-swatch--active {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px var(--ls-primary);
 }
 
 .ls-modal__specs {
@@ -1766,6 +2102,37 @@ svg {
 
   .ls-book-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ls-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ls-sort-control {
+    justify-content: space-between;
+  }
+
+  .ls-sort-control__select {
+    flex: 1;
+  }
+
+  .ls-form__grid,
+  .ls-form__grid--3 {
+    grid-template-columns: 1fr;
+  }
+
+  .ls-modal__specs {
+    grid-template-columns: 1fr;
+  }
+
+  .ls-modal__actions--between {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .ls-modal__actions-right {
+    justify-content: flex-end;
   }
 
   .ls-footer__main {
